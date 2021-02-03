@@ -45,13 +45,13 @@ public class ClientHandler {
         }
     }
 
-    public void authentication() throws IOException  {
+    public void authentication() throws IOException {
         socket.setSoTimeout(MyServer.SO_TIMEOUT_AUTH);
         while (true) {
             String str = null;
             try {
-                 str = in.readUTF();
-            } catch (IOException   e){
+                str = in.readUTF();
+            } catch (IOException e) {
                 throw new IOException();
             }
             System.out.println(str);
@@ -76,7 +76,6 @@ public class ClientHandler {
         }
     }
 
-
     public void sendConnectedNicks() {
         ArrayList<String> listNicks = myServer.getConnectedNicks();
         for (String nick : listNicks) {
@@ -98,7 +97,6 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public void closeConnection() {
@@ -121,7 +119,7 @@ public class ClientHandler {
             String strFromClient = null;
             try {
                 strFromClient = in.readUTF();
-            } catch (IOException e){
+            } catch (IOException e) {
                 throw new IOException();
             }
             System.out.println("от " + name + ": " + strFromClient);

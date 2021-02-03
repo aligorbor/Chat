@@ -25,7 +25,6 @@ public class BaseAuthService implements AuthService {
         entries.add(new Entry("login3", "111", "nick3"));
     }
 
-
     @Override
     public void start() {
         System.out.println("Сервис аутентификации запущен");

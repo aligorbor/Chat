@@ -17,6 +17,5 @@ public class ServerApp {
             e.printStackTrace();
             System.exit(1);
         }
-
     }
 }
