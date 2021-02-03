@@ -6,10 +6,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Controller {
 
+    @FXML
+    private Label labelLoginNick;
     @FXML
     private TextField inputField;
 
@@ -23,24 +27,14 @@ public class Controller {
     private ListView<String> listPersons;
 
     @FXML
-    private ChoiceBox<String> choicePersonAccount;
-
-    @FXML
     private Label labelPersonChat;
 
-    @FXML
-    private TextField passwField;
-
-    @FXML
-    private Button authButton;
 
     private MultipleSelectionModel<String> personsSelectionModel;
 
     private ObservableList<String> personList = FXCollections.observableArrayList
             ("Общий чат");
     private final ArrayList<ObservableList<String>> arrChat = new ArrayList<>();
-
-    private ObservableList<String> loginList = FXCollections.observableArrayList();
 
     private Network network;
     private String loginNick;
@@ -62,24 +56,15 @@ public class Controller {
         while (arrChat.size() < personList.size())
             arrChat.add(FXCollections.observableArrayList());
 
-        choicePersonAccount.setItems(loginList);
-        //   choicePersonAccount.setValue(choicePersonAccount.getItems().get(0));
-        choicePersonAccount.setOnAction(actionEvent -> {
-            // System.out.println(choicePersonAccount.getValue());
-            choicePersonAccount.setDisable(false);
-            passwField.setDisable(false);
-            authButton.setDisable(false);
-            inputField.setDisable(true);
-            sendButton.setDisable(true);
-        });
-
         personsSelectionModel.select(0);
     }
 
     @FXML
     void sendMessage() {
+        // String timeStamp = DateFormat.getInstance().format(new Date());
         String message = inputField.getText().trim();
         if (!message.isBlank()) {
+            // message = timeStamp + " "+ message;
             int index = personsSelectionModel.getSelectedIndex();
             if (index > 0) {
                 message = Network.CMD_PREF_INDIVID + " " + personList.get(index) + ": " + message;
@@ -126,48 +111,36 @@ public class Controller {
             listView.getItems().add(message);
     }
 
-    @FXML
-    void onAuthClick() {
-        network.startAuthorization();
-        try {
-            network.getOut().writeUTF(Network.CMD_PREF_AUTH + " " + choicePersonAccount.getValue() + " " + passwField.getText());
-            passwField.clear();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void addLoginList(String login) {
-        loginList.add(login);
-    }
-
-    public void clearLoginList() {
-        loginList.removeAll();
-    }
-
     public String addNick(String strNick) {
         String[] parts = strNick.split("\\s");
-        if (parts[0].equals(Network.CMD_PREF_AUTHOK)) {
-            loginNick = parts[1];
-            choicePersonAccount.setDisable(true);
-            passwField.setDisable(true);
-            authButton.setDisable(true);
-            inputField.setDisable(false);
-            sendButton.setDisable(false);
+        String cmdPref = parts[0];
+        String msgNick = parts[1];
+        if (cmdPref.equals(Network.CMD_PREF_AUTHOK)) {
+            loginNick = msgNick;
+            labelLoginNick.setText(loginNick);
+            prepareControls();
             return loginNick + " зашел в чат";
-        } else if ((parts[0].equals(Network.CMD_PREF_NICK) || parts[0].equals(Network.CMD_PREF_NICKLIST)) && !parts[1].equals(loginNick)) {
-            personList.add(parts[1]);
+        } else if ((cmdPref.equals(Network.CMD_PREF_NICK) || cmdPref.equals(Network.CMD_PREF_NICKLIST)) && !msgNick.equals(loginNick)) {
+            personList.add(msgNick);
             arrChat.add(FXCollections.observableArrayList());
-            if (parts[0].equals(Network.CMD_PREF_NICK))
-                return parts[1] + " зашел в чат";
-        } else if (parts[0].equals(Network.CMD_PREF_NICKEND) && !parts[1].equals(loginNick)) {
-            arrChat.remove(personList.indexOf(parts[1]));
-            personList.remove(parts[1]);
+            if (cmdPref.equals(Network.CMD_PREF_NICK))
+                return msgNick + " зашел в чат";
+        } else if (cmdPref.equals(Network.CMD_PREF_NICKEND) && !msgNick.equals(loginNick)) {
+            arrChat.remove(personList.indexOf(msgNick));
+            personList.remove(msgNick);
             return parts[1] + " вышел из чата";
         }
         return "";
     }
 
+    public void prepareControls() {
+        if (network.isAuthorized()) {
+            inputField.setDisable(false);
+            sendButton.setDisable(false);
+        } else {
+            inputField.setDisable(true);
+            sendButton.setDisable(true);
+        }
 
+    }
 }

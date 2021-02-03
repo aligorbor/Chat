@@ -32,9 +32,19 @@ public class Network {
     private final String host;
 
     private Controller controller;
+    private AuthController authController;
+    private Main mainChat;
+
+    public void setMainChat(Main mainChat) {
+        this.mainChat = mainChat;
+    }
 
     public void setController(Controller controller) {
         this.controller = controller;
+    }
+
+    public void setAuthController(AuthController authController) {
+        this.authController = authController;
     }
 
     public Network(String host, int port) {
@@ -62,6 +72,7 @@ public class Network {
             out = new DataOutputStream(socket.getOutputStream());
             getLoginsFromServer();
             setAuthorized(false);
+            startAuthorization();
         } catch (IOException e) {
             System.out.println("Соединение не установлено");
             return false;
@@ -72,7 +83,7 @@ public class Network {
     public void disconnect() {
         try {
             controller.setLoginNick("");
-            controller.clearLoginList();
+            authController.clearLoginList();
             out.writeUTF(Network.CMD_PREF_END);
             socket.close();
         } catch (IOException e) {
@@ -87,7 +98,7 @@ public class Network {
             if (message.startsWith(Network.CMD_PREF_LOGINEND)) {
                 break;
             }
-            controller.addLoginList(message);
+            authController.addLoginList(message);
         }
     }
 
@@ -104,11 +115,14 @@ public class Network {
                         Platform.runLater(() -> controller.appendMessage(message));
                         if (message.startsWith(Network.CMD_PREF_AUTHOK)) {
                             setAuthorized(true);
+                            Platform.runLater(() -> mainChat.getAuthStage().close());
+                            //   Platform.runLater(() -> mainChat.getPrimaryStage().show());
                             break;
                         }
                     }
                 } catch (IOException e) {
                     System.out.println("Ошибка при авторизации");
+                    System.exit(1);
                 }
             }
         }).start();

@@ -22,6 +22,8 @@ public class MyServer {
     public static final String CMD_PREF_INDIVID = "/w";
     public static final String CMD_PREF_INDIVIDBACK = "/wback";
 
+    public static final int SO_TIMEOUT_AUTH = 120000;
+    public static final int SO_TIMEOUT_INACTIVITY = 3600000;
 
     public AuthService getAuthService() {
         return authService;

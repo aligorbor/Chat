@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 public class ClientHandler {
@@ -43,9 +45,15 @@ public class ClientHandler {
         }
     }
 
-    public void authentication() throws IOException {
+    public void authentication() throws IOException  {
+        socket.setSoTimeout(MyServer.SO_TIMEOUT_AUTH);
         while (true) {
-            String str = in.readUTF();
+            String str = null;
+            try {
+                 str = in.readUTF();
+            } catch (IOException   e){
+                throw new IOException();
+            }
             System.out.println(str);
             if (str.startsWith(MyServer.CMD_PREF_AUTH)) {
                 String[] parts = str.split("\\s");
@@ -95,7 +103,8 @@ public class ClientHandler {
 
     public void closeConnection() {
         myServer.unsubscribe(this);
-        myServer.broadcastMsg(MyServer.CMD_PREF_NICKEND + " " + name);
+        if (!name.isBlank())
+            myServer.broadcastMsg(MyServer.CMD_PREF_NICKEND + " " + name);
         System.out.println("Клиент " + name + " отключился");
         try {
             in.close();
@@ -107,8 +116,14 @@ public class ClientHandler {
     }
 
     public void readMessages() throws IOException {
+        socket.setSoTimeout(MyServer.SO_TIMEOUT_INACTIVITY);
         while (true) {
-            String strFromClient = in.readUTF();
+            String strFromClient = null;
+            try {
+                strFromClient = in.readUTF();
+            } catch (IOException e){
+                throw new IOException();
+            }
             System.out.println("от " + name + ": " + strFromClient);
             if (strFromClient.equals(MyServer.CMD_PREF_END)) {
                 return;
